@@ -57,6 +57,39 @@ def protected_route():
     except Exception as e:
         return jsonify({"error": f"Token inválido: {str(e)}"}), 401
 
+@app.route("/recuperar", methods=["GET"])
+def recuperar_informacion_usuario():
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return jsonify({"error": "Token no proporcionado"}), 401
+
+    try:
+        id_token = auth_header.split(" ")[1]
+        decoded_token = auth.verify_id_token(id_token)
+        uid = decoded_token["uid"]
+
+        # Obtener información adicional del usuario desde Firestore (si existe)
+        doc = db.collection('usuarios').document(uid).get()
+        if doc.exists:
+            usuario_data = doc.to_dict()
+            nombre_usuario = usuario_data.get("nombre", "Nombre no definido")
+        else:
+            nombre_usuario = "Usuario no encontrado en base de datos"
+
+        # Imprimir en consola
+        print(f"UID: {uid}")
+        print(f"Token: {id_token}")
+        print(f"Nombre de usuario: {nombre_usuario}")
+
+        return jsonify({
+            "uid": uid,
+            "token": id_token,
+            "nombre": nombre_usuario
+        }), 200
+
+    except Exception as e:
+        return jsonify({"error": f"Token inválido o error al recuperar usuario: {str(e)}"}), 401
+
 
 @app.route('/api/preferencias', methods=['POST'])
 def guardar_preferencias():
