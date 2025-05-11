@@ -200,7 +200,7 @@ def chat():
 
     try:
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o-mini",
             messages=[{"role": "system", "content": contexto}, {"role": "user", "content": user_input}]
         )
         respuesta = response.choices[0].message.content
