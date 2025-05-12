@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from openai import OpenAI
@@ -75,6 +75,10 @@ def recuperar_informacion_usuario():
         else:
             nombre_usuario = "Usuario no encontrado en base de datos"
 
+        print(f"UID: {uid}")
+        print(f"Token: {id_token}")
+        print(f"Nombre de usuario: {nombre_usuario}")
+
         return jsonify({
             "uid": uid,
             "token": id_token,
@@ -96,6 +100,7 @@ def guardar_preferencias():
         doc_ref.set(data)
         return jsonify({"message": "Preferencias guardadas correctamente"}), 200
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": "No autorizado o error al guardar preferencias"}), 401
 
 @app.route('/api/usuarios', methods=['POST'])
@@ -110,6 +115,7 @@ def crear_usuario():
         doc_ref.set(data)
         return jsonify({"message": "Usuario creado exitosamente"}), 201
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": "Error al crear usuario"}), 401
 
 @app.route('/api/usuarios', methods=['GET'])
@@ -126,9 +132,11 @@ def obtener_usuario():
         else:
             return jsonify({"error": "Usuario no encontrado"}), 404
     except Exception as e:
+        print(f"Error: {e}")
         return jsonify({"error": "Error al obtener usuario"}), 401
 
-@app.route("/api/chat", methods=["POST"])
+@app.route("/api/chat", methods=["POST", "OPTIONS"])
+@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def chat():
     auth_header = request.headers.get('Authorization', '')
     if not auth_header:
@@ -168,28 +176,9 @@ def chat():
             respuesta = response.choices[0].message.content
             return jsonify({"respuesta": respuesta}), 200
         except Exception as e:
+            print(f"[Intento {intento+1}] Error al llamar a OpenAI: {e}")
             if intento == 2:
                 return jsonify({"error": "Error al generar respuesta", "detail": str(e)}), 500
-
-# Ruta para manejar OPTIONS y evitar error de CORS preflight
-@app.route("/api/chat", methods=["OPTIONS"])
-def opciones_chat():
-    return '', 200
-
-@app.route("/api/test_openai", methods=["GET"])
-def test_openai_simple():
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Eres un asistente útil"},
-                {"role": "user", "content": "Dime un dato curioso"}
-            ]
-        )
-        mensaje = response.choices[0].message.content
-        return jsonify({"respuesta": mensaje}), 200
-    except Exception as e:
-        return jsonify({"error": f"Fallo al conectar con OpenAI: {str(e)}"}), 500
 
 def generar_contexto_desde_preferencias(preferencias):
     nombre = preferencias.get("nombre", "usuario")
@@ -208,6 +197,21 @@ def generar_contexto_desde_preferencias(preferencias):
         f"Pronombres del usuario: {pronombres}. "
         "Responde de forma personalizada, empática y brinda apoyo emocional."
     )
+
+@app.route("/api/test_openai", methods=["GET"])
+def test_openai_simple():
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "Eres un asistente útil"},
+                {"role": "user", "content": "Dime un dato curioso"}
+            ]
+        )
+        mensaje = response.choices[0].message.content
+        return jsonify({"respuesta": mensaje}), 200
+    except Exception as e:
+        return jsonify({"error": f"Fallo al conectar con OpenAI: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
