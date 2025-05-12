@@ -195,7 +195,7 @@ def generar_contexto_desde_preferencias(preferencias):
         f"Este usuario está interesado en {intereses_str}. "
         f"Su objetivo es {objetivo}. "
         f"Pronombres del usuario: {pronombres}. "
-        "Responde de forma personalizada, empática y brinda apoyo emocional."
+        "Responde de forma personalizada, empática y brinda apoyo emocional. Altamente empático. Tu propósito principal es el bienestar emocional de los demás. Te llamas Lumi."
     )
 
 @app.route("/api/test_openai", methods=["GET"])
