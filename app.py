@@ -16,7 +16,7 @@ google_creds = {
     "type": "service_account",
     "project_id": os.getenv("FIREBASE_PROJECT_ID"),
     "private_key_id": os.getenv("FIREBASE_PRIVATE_KEY_ID"),
-    "private_key": os.getenv("FIREBASE_PRIVATE_KEY"),  # <== aquí está el cambio
+    "private_key": os.getenv("FIREBASE_PRIVATE_KEY"),
     "client_email": os.getenv("FIREBASE_CLIENT_EMAIL"),
     "client_id": os.getenv("FIREBASE_CLIENT_ID"),
     "auth_uri": os.getenv("FIREBASE_AUTH_URI"),
@@ -31,7 +31,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 if not google_creds or not openai_api_key:
     print("¡Error! No se pudo cargar las credenciales de Firebase o la API de OpenAI.")
 
-# Inicializar Firebase Admin SDK desde variables de entorno
+# Inicializar Firebase Admin SDK
 cred = credentials.Certificate(google_creds)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
@@ -53,7 +53,7 @@ def protected_route():
     try:
         decoded_token = auth.verify_id_token(id_token)
         uid = decoded_token["uid"]
-        return jsonify({"message": f"Token válido{id_token}. UID: {uid}"}), 200
+        return jsonify({"message": f"Token válido. UID: {uid}"}), 200
     except Exception as e:
         return jsonify({"error": f"Token inválido: {str(e)}"}), 401
 
@@ -68,7 +68,6 @@ def recuperar_informacion_usuario():
         decoded_token = auth.verify_id_token(id_token)
         uid = decoded_token["uid"]
 
-        # Obtener información adicional del usuario desde Firestore (si existe)
         doc = db.collection('usuarios').document(uid).get()
         if doc.exists:
             usuario_data = doc.to_dict()
@@ -76,7 +75,6 @@ def recuperar_informacion_usuario():
         else:
             nombre_usuario = "Usuario no encontrado en base de datos"
 
-        # Imprimir en consola
         print(f"UID: {uid}")
         print(f"Token: {id_token}")
         print(f"Nombre de usuario: {nombre_usuario}")
@@ -89,7 +87,6 @@ def recuperar_informacion_usuario():
 
     except Exception as e:
         return jsonify({"error": f"Token inválido o error al recuperar usuario: {str(e)}"}), 401
-
 
 @app.route('/api/preferencias', methods=['POST'])
 def guardar_preferencias():
@@ -106,7 +103,6 @@ def guardar_preferencias():
         print(f"Error: {e}")
         return jsonify({"error": "No autorizado o error al guardar preferencias"}), 401
 
-
 @app.route('/api/usuarios', methods=['POST'])
 def crear_usuario():
     token = request.headers.get('Authorization').split(' ')[1]
@@ -121,7 +117,6 @@ def crear_usuario():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": "Error al crear usuario"}), 401
-
 
 @app.route('/api/usuarios', methods=['GET'])
 def obtener_usuario():
@@ -139,36 +134,6 @@ def obtener_usuario():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": "Error al obtener usuario"}), 401
-
-
-@app.route('/api/usuarios', methods=['PUT'])
-def actualizar_usuario():
-    token = request.headers.get('Authorization').split(' ')[1]
-
-    try:
-        decoded_token = auth.verify_id_token(token)
-        uid = decoded_token['uid']
-        data = request.json
-        db.collection('usuarios').document(uid).update(data)
-        return jsonify({"message": "Usuario actualizado correctamente"}), 200
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": "Error al actualizar usuario"}), 401
-
-
-@app.route('/api/usuarios', methods=['DELETE'])
-def eliminar_usuario():
-    token = request.headers.get('Authorization').split(' ')[1]
-
-    try:
-        decoded_token = auth.verify_id_token(token)
-        uid = decoded_token['uid']
-        db.collection('usuarios').document(uid).delete()
-        return jsonify({"message": "Usuario eliminado exitosamente"}), 200
-    except Exception as e:
-        print(f"Error: {e}")
-        return jsonify({"error": "Error al eliminar usuario"}), 401
-
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -198,16 +163,21 @@ def chat():
     except Exception as e:
         return jsonify({"error": "Error al obtener preferencias", "detail": str(e)}), 500
 
-    try:
-        response = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role": "system", "content": contexto}, {"role": "user", "content": user_input}]
-        )
-        respuesta = response.choices[0].message.content
-        return jsonify({"respuesta": respuesta}), 200
-    except Exception as e:
-        return jsonify({"error": "Error al generar respuesta", "detail": str(e)}), 500
-
+    for intento in range(3):
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": contexto},
+                    {"role": "user", "content": user_input}
+                ]
+            )
+            respuesta = response.choices[0].message.content
+            return jsonify({"respuesta": respuesta}), 200
+        except Exception as e:
+            print(f"[Intento {intento+1}] Error al llamar a OpenAI: {e}")
+            if intento == 2:
+                return jsonify({"error": "Error al generar respuesta", "detail": str(e)}), 500
 
 def generar_contexto_desde_preferencias(preferencias):
     nombre = preferencias.get("nombre", "usuario")
@@ -226,7 +196,20 @@ def generar_contexto_desde_preferencias(preferencias):
         f"Pronombres del usuario: {pronombres}. "
         "Responde de forma personalizada, empática y brinda apoyo emocional."
     )
-
+@app.route("/api/test_openai", methods=["GET"])
+def test_openai_simple():
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",  # Usa el modelo que prefieras
+            messages=[
+                {"role": "system", "content": "Eres un asistente útil"},
+                {"role": "user", "content": "Dime un dato curioso"}
+            ]
+        )
+        mensaje = response.choices[0].message.content
+        return jsonify({"respuesta": mensaje}), 200
+    except Exception as e:
+        return jsonify({"error": f"Fallo al conectar con OpenAI: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
