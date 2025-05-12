@@ -160,7 +160,7 @@ def chat():
             preferencias = doc.to_dict()
             contexto = generar_contexto_desde_preferencias(preferencias)
         else:
-            contexto = "Eres un asistente amigable y útil."
+            contexto = "Eres un asistente amigable y útil. Altamente empático. Tu propósito principal es el bienestar emocional de los demás. Te llamas Lumi."
     except Exception as e:
         return jsonify({"error": "Error al obtener preferencias", "detail": str(e)}), 500
 
