@@ -123,6 +123,7 @@ def guardar_preferencias():
         return jsonify({"error": "No autorizado o error al guardar preferencias"}), 401
 
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
+@cross_origin(origin='*', methods=['POST', 'OPTIONS'], allow_headers=['Content-Type','Authorization'], supports_credentials=True)
 def chat():
     auth_header = request.headers.get('Authorization', '')
     if not auth_header:
