@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS, cross_origin
+from flask_cors import CORS
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from openai import OpenAI
@@ -8,8 +8,9 @@ from dotenv import load_dotenv
 import json
 
 app = Flask(__name__)
-CORS(app, origins=lambda origin: True, supports_credentials=True)
 
+# CORS global: acepta cualquier origen dinámicamente
+CORS(app, origins=lambda origin: True, supports_credentials=True)
 
 # Cargar variables de entorno
 load_dotenv()
@@ -32,7 +33,7 @@ openai_api_key = os.getenv("OPENAI_API_KEY")
 if not google_creds or not openai_api_key:
     print("¡Error! No se pudo cargar las credenciales de Firebase o la API de OpenAI.")
 
-# Inicializar Firebase Admin SDK
+# Inicializar Firebase
 cred = credentials.Certificate(google_creds)
 firebase_admin.initialize_app(cred)
 db = firestore.client()
@@ -62,7 +63,6 @@ def protected_route():
         return jsonify({"error": f"Token inválido: {str(e)}"}), 401
 
 @app.route("/recuperar", methods=["GET", "OPTIONS"])
-@cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
 def recuperar_informacion_usuario():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -80,10 +80,6 @@ def recuperar_informacion_usuario():
         else:
             nombre_usuario = "Usuario no encontrado en base de datos"
 
-        print(f"UID: {uid}")
-        print(f"Token: {id_token}")
-        print(f"Nombre de usuario: {nombre_usuario}")
-
         return jsonify({
             "uid": uid,
             "token": id_token,
@@ -94,7 +90,6 @@ def recuperar_informacion_usuario():
         return jsonify({"error": f"Token inválido o error al recuperar usuario: {str(e)}"}), 401
 
 @app.route('/api/preferencias', methods=['POST', 'OPTIONS'])
-@cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
 def guardar_preferencias():
     token = request.headers.get('Authorization').split(' ')[1]
 
@@ -109,9 +104,7 @@ def guardar_preferencias():
         print(f"Error: {e}")
         return jsonify({"error": "No autorizado o error al guardar preferencias"}), 401
 
-
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
-@cross_origin(origins="http://localhost:5173", supports_credentials=True)
 def chat():
     auth_header = request.headers.get('Authorization', '')
     if not auth_header:
@@ -188,8 +181,7 @@ def test_openai_simple():
     except Exception as e:
         return jsonify({"error": f"Fallo al conectar con OpenAI: {str(e)}"}), 500
 
-@app.route("/recuperarinfouser", methods=["GET"])
-@cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
+@app.route("/recuperarinfouser", methods=["GET", "OPTIONS"])
 def recuperar_info_user():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -214,7 +206,6 @@ def recuperar_info_user():
 
     except Exception as e:
         return jsonify({"error": "Token inválido o error al recuperar preferencias", "detail": str(e)}), 401
-
 
 if __name__ == "__main__":
     app.run(debug=True)
