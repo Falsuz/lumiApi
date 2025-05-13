@@ -49,7 +49,7 @@ client = OpenAI(api_key=openai_api_key)
 def test():
     return jsonify({"message": "ok"})
 
-@app.route("/protected", methods=["GET", "OPTIONS"])
+@app.route("/protected", methods=["GET"])
 def protected_route():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -67,7 +67,7 @@ def protected_route():
     except Exception as e:
         return jsonify({"error": f"Token inválido: {str(e)}"}), 401
 
-@app.route("/recuperar", methods=["GET", "OPTIONS"])
+@app.route("/recuperar", methods=["GET"])
 def recuperar_informacion_usuario():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -168,7 +168,7 @@ def generar_contexto_desde_preferencias(preferencias):
         "Responde de forma personalizada, empática y brinda apoyo emocional. Altamente empático. Tu propósito principal es el bienestar emocional de los demás. Te llamas Lumi."
     )
 
-@app.route("/api/test_openai", methods=["GET", "OPTIONS"])
+@app.route("/api/test_openai", methods=["GET"])
 def test_openai_simple():
     try:
         response = client.chat.completions.create(
@@ -180,7 +180,7 @@ def test_openai_simple():
     except Exception as e:
         return jsonify({"error": f"Fallo al conectar con OpenAI: {str(e)}"}), 500
 
-@app.route("/recuperarinfouser", methods=["GET", "OPTIONS"])
+@app.route("/recuperarinfouser", methods=["GET"])
 def recuperar_info_user():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
