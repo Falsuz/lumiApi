@@ -141,10 +141,7 @@ def chat():
         try:
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
-                messages=[
-                    {"role": "system", "content": contexto},
-                    {"role": "user", "content": user_input}
-                ]
+                messages=[{"role": "system", "content": contexto}, {"role": "user", "content": user_input}]
             )
             respuesta = response.choices[0].message.content
             return jsonify({"respuesta": respuesta}), 200
@@ -176,10 +173,7 @@ def test_openai_simple():
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[
-                {"role": "system", "content": "Eres un asistente útil"},
-                {"role": "user", "content": "Dime un dato curioso"}
-            ]
+            messages=[{"role": "system", "content": "Eres un asistente útil"}, {"role": "user", "content": "Dime un dato curioso"}]
         )
         mensaje = response.choices[0].message.content
         return jsonify({"respuesta": mensaje}), 200
@@ -211,11 +205,12 @@ def recuperar_info_user():
 
     except Exception as e:
         return jsonify({"error": "Token inválido o error al recuperar preferencias", "detail": str(e)}), 401
+
 @app.after_request
 def after_request(response):
+    # Asegúrate de que este encabezado no se repita innecesariamente
     response.headers['Access-Control-Allow-Credentials'] = 'true'
     return response
-
 
 if __name__ == "__main__":
     app.run(debug=True)
