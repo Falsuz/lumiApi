@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 import json
 
 app = Flask(__name__)
-CORS(app, origins="*")
+CORS(app, origins=lambda origin: True, supports_credentials=True)
+
 
 # Cargar variables de entorno
 load_dotenv()
