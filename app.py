@@ -8,7 +8,10 @@ from dotenv import load_dotenv
 import json
 
 app = Flask(__name__)
-CORS(app, origins=["http://localhost:5173"], supports_credentials=True)
+CORS(app, origins=[
+    "http://localhost:5173",
+    "https://tu-app.vercel.app"  # Reemplaza con tu dominio real en Vercel
+], supports_credentials=True)
 
 # Cargar variables de entorno
 load_dotenv()
@@ -61,6 +64,7 @@ def protected_route():
         return jsonify({"error": f"Token inválido: {str(e)}"}), 401
 
 @app.route("/recuperar", methods=["GET"])
+@cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
 def recuperar_informacion_usuario():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -92,6 +96,7 @@ def recuperar_informacion_usuario():
         return jsonify({"error": f"Token inválido o error al recuperar usuario: {str(e)}"}), 401
 
 @app.route('/api/preferencias', methods=['POST'])
+@cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
 def guardar_preferencias():
     token = request.headers.get('Authorization').split(' ')[1]
 
@@ -186,6 +191,7 @@ def test_openai_simple():
         return jsonify({"error": f"Fallo al conectar con OpenAI: {str(e)}"}), 500
 
 @app.route("/recuperarinfouser", methods=["GET"])
+@cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
 def recuperar_info_user():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
