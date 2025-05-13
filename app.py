@@ -1,5 +1,5 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 import firebase_admin
 from firebase_admin import credentials, auth, firestore
 from openai import OpenAI
@@ -98,18 +98,28 @@ def recuperar_informacion_usuario():
         return jsonify({"error": f"Token inválido o error al recuperar usuario: {str(e)}"}), 401
 
 @app.route('/api/preferencias', methods=['POST', 'OPTIONS'])
+@cross_origin(origin='*', methods=['POST', 'OPTIONS'], allow_headers=['Content-Type','Authorization'], supports_credentials=True)
 def guardar_preferencias():
-    token = request.headers.get('Authorization').split(' ')[1]
+    # 1) Atiende el preflight y corta aquí
+    if request.method == 'OPTIONS':
+        return '', 200
 
+    # 2) Lógica normal de POST
+    auth_header = request.headers.get('Authorization', '')
+    parts = auth_header.split(' ')
+    if len(parts) != 2 or parts[0] != 'Bearer':
+        return jsonify({"error": "Token mal formado"}), 401
+
+    token = parts[1]
     try:
         decoded_token = auth.verify_id_token(token)
         uid = decoded_token['uid']
-        data = request.json
-        doc_ref = db.collection('preferencias').document(uid)
-        doc_ref.set(data)
+        data = request.json or {}
+        db.collection('preferencias').document(uid).set(data)
         return jsonify({"message": "Preferencias guardadas correctamente"}), 200
+
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Error al guardar preferencias: {e}")
         return jsonify({"error": "No autorizado o error al guardar preferencias"}), 401
 
 @app.route("/api/chat", methods=["POST", "OPTIONS"])
