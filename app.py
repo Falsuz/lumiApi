@@ -45,7 +45,7 @@ client = OpenAI(api_key=openai_api_key)
 def test():
     return jsonify({"message": "ok"})
 
-@app.route("/protected", methods=["GET"])
+@app.route("/protected", methods=["GET", "OPTIONS"])
 def protected_route():
     auth_header = request.headers.get("Authorization")
     if not auth_header:
@@ -63,7 +63,7 @@ def protected_route():
     except Exception as e:
         return jsonify({"error": f"Token inválido: {str(e)}"}), 401
 
-@app.route("/recuperar", methods=["GET"])
+@app.route("/recuperar", methods=["GET", "OPTIONS"])
 @cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
 def recuperar_informacion_usuario():
     auth_header = request.headers.get("Authorization")
@@ -95,7 +95,7 @@ def recuperar_informacion_usuario():
     except Exception as e:
         return jsonify({"error": f"Token inválido o error al recuperar usuario: {str(e)}"}), 401
 
-@app.route('/api/preferencias', methods=['POST'])
+@app.route('/api/preferencias', methods=['POST', 'OPTIONS'])
 @cross_origin(origins=["https://tu-app.vercel.app", "http://localhost:5173"], supports_credentials=True)
 def guardar_preferencias():
     token = request.headers.get('Authorization').split(' ')[1]
@@ -175,7 +175,7 @@ def generar_contexto_desde_preferencias(preferencias):
         "Responde de forma personalizada, empática y brinda apoyo emocional. Altamente empático. Tu propósito principal es el bienestar emocional de los demás. Te llamas Lumi."
     )
 
-@app.route("/api/test_openai", methods=["GET"])
+@app.route("/api/test_openai", methods=["GET", "OPTIONS"])
 def test_openai_simple():
     try:
         response = client.chat.completions.create(
