@@ -10,12 +10,15 @@ import json
 app = Flask(__name__)
 
 # CORS global: acepta cualquier origen dinámicamente
-CORS(app, resources={r"/*": {
-    "origins": ["https://lumi-ai-front.vercel.app"],  # Tu frontend en Vercel
-    "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization"],
-    "supports_credentials": True  # Esto es clave para las cookies
-}})
+CORS(
+    app,
+    supports_credentials=True,
+    resources={r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["*"]
+    }}
+)
 
 # Cargar variables de entorno
 load_dotenv()
