@@ -206,11 +206,6 @@ def recuperar_info_user():
     except Exception as e:
         return jsonify({"error": "Token inválido o error al recuperar preferencias", "detail": str(e)}), 401
 
-@app.after_request
-def after_request(response):
-    # Asegúrate de que este encabezado no se repita innecesariamente
-    response.headers['Access-Control-Allow-Credentials'] = 'true'
-    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
