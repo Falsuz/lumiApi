@@ -53,7 +53,10 @@ def protected_route():
     try:
         decoded_token = auth.verify_id_token(id_token)
         uid = decoded_token["uid"]
-        return jsonify({"message": f"Token válido. UID: {uid}"}), 200
+        return jsonify({
+            "uid": uid,
+            "token": id_token,
+        }), 200
     except Exception as e:
         return jsonify({"error": f"Token inválido: {str(e)}"}), 401
 
