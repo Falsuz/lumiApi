@@ -10,7 +10,7 @@ import json
 app = Flask(__name__)
 
 # CORS global: acepta cualquier origen dinámicamente
-CORS(app, origins=lambda origin: True, supports_credentials=True)
+CORS(app, supports_credentials=True)
 
 # Cargar variables de entorno
 load_dotenv()
