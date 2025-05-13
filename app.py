@@ -13,10 +13,9 @@ app = Flask(__name__)
 CORS(app, resources={r"/*": {
     "origins": ["https://lumi-ai-front.vercel.app"],  # Tu frontend en Vercel
     "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    "allow_headers": ["Content-Type", "Authorization", "Access-Control-Allow-Credentials"],  # Asegúrate de incluir estos encabezados
+    "allow_headers": ["Content-Type", "Authorization"],  # Asegúrate de incluir estos encabezados
     "supports_credentials": True  # Esto es clave para las cookies
 }})
-
 # Cargar variables de entorno
 load_dotenv()
 google_creds = {
@@ -211,6 +210,11 @@ def recuperar_info_user():
 
     except Exception as e:
         return jsonify({"error": "Token inválido o error al recuperar preferencias", "detail": str(e)}), 401
+@app.after_request
+def after_request(response):
+    # Asegura que las cookies se manejen correctamente
+    response.headers['Access-Control-Allow-Credentials'] = 'true'
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
