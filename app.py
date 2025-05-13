@@ -8,7 +8,10 @@ from dotenv import load_dotenv
 import json
 
 app = Flask(__name__)
-CORS(app, origins="*", supports_credentials=True)
+CORS(app, origins=[
+    "https://lumi-ai-front.vercel.app/",
+    "http://localhost:5173"
+], supports_credentials=True)
 
 # Cargar variables de entorno
 load_dotenv()
