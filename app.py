@@ -10,7 +10,7 @@ import json
 app = Flask(__name__)
 CORS(app, origins=[
     "http://localhost:5173",
-    "https://tu-app.vercel.app"  # Reemplaza con tu dominio real en Vercel
+    "https://lumi-ai-front.vercel.app"  # Reemplaza con tu dominio real en Vercel
 ], supports_credentials=True)
 
 # Cargar variables de entorno
